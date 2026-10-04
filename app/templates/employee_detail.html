@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}
+Employee Details
+{% endblock %}
+
+
+{% block content %}
+
+<h1>
+    Employee Details
+</h1>
+
+
+<div class="employee-card">
+
+    <h2>
+        {{ employee.name }}
+    </h2>
+
+    <p>
+        <strong>ID:</strong>
+        {{ employee.id }}
+    </p>
+
+    <p>
+        <strong>Email:</strong>
+        {{ employee.email }}
+    </p>
+
+    <p>
+        <strong>Department:</strong>
+        {{ employee.department }}
+    </p>
+
+    <p>
+        <strong>Position:</strong>
+        {{ employee.position }}
+    </p>
+
+    <p>
+        <strong>Salary:</strong>
+        Rs. {{ "%.2f"|format(employee.salary) }}
+    </p>
+
+
+    <div class="actions">
+
+        <a
+            class="button"
+            href="{{ url_for(
+                'main.edit_employee',
+                employee_id=employee.id
+            ) }}"
+        >
+            Edit
+        </a>
+
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'main.delete_employee',
+                employee_id=employee.id
+            ) }}"
+            onsubmit="return confirmDelete()"
+        >
+
+            <button
+                class="danger"
+                type="submit"
+            >
+                Delete
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

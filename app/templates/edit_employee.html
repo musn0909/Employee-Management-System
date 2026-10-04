@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Employee
+{% endblock %}
+
+
+{% block content %}
+
+<h1>
+    Edit Employee
+</h1>
+
+
+<form
+    method="POST"
+    class="employee-form"
+>
+
+    <label>
+        Name
+    </label>
+
+    <input
+        type="text"
+        name="name"
+        value="{{ employee.name }}"
+        required
+    >
+
+
+    <label>
+        Email
+    </label>
+
+    <input
+        type="email"
+        name="email"
+        value="{{ employee.email }}"
+        required
+    >
+
+
+    <label>
+        Department
+    </label>
+
+    <input
+        type="text"
+        name="department"
+        value="{{ employee.department }}"
+        required
+    >
+
+
+    <label>
+        Position
+    </label>
+
+    <input
+        type="text"
+        name="position"
+        value="{{ employee.position }}"
+        required
+    >
+
+
+    <label>
+        Salary
+    </label>
+
+    <input
+        type="number"
+        name="salary"
+        value="{{ employee.salary }}"
+        min="0"
+        step="0.01"
+        required
+    >
+
+
+    <button type="submit">
+        Update Employee
+    </button>
+
+</form>
+
+{% endblock %}
