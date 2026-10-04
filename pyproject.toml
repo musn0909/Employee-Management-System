@@ -1,2 +1,8 @@
+[project]
+name = "employee-management-system"
+version = "1.0.0"
+description = "Employee Management System built with Flask"
+requires-python = ">=3.12"
+
 [tool.vercel]
 entrypoint = "run:app"
