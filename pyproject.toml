@@ -3,6 +3,12 @@ name = "employee-management-system"
 version = "1.0.0"
 description = "Employee Management System built with Flask"
 requires-python = ">=3.12"
+dependencies = [
+    "Flask",
+    "Flask-SQLAlchemy",
+    "python-dotenv",
+    "gunicorn"
+]
 
 [tool.vercel]
 entrypoint = "run:app"
