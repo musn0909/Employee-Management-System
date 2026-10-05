@@ -4,7 +4,6 @@
 Employees
 {% endblock %}
 
-
 {% block content %}
 
 <div class="header">
@@ -21,12 +20,16 @@ Employees
 
     </div>
 
-    <a
-        class="button"
-        href="{{ url_for('main.add_employee') }}"
-    >
-        + Add Employee
-    </a>
+    {% if session.get("role") in ["admin", "hr"] %}
+
+        <a
+            class="button"
+            href="{{ url_for('main.add_employee') }}"
+        >
+            + Add Employee
+        </a>
+
+    {% endif %}
 
 </div>
 
@@ -75,85 +78,85 @@ Employees
 
 <div class="table-container">
 
-<table>
+    <table>
 
-<thead>
+        <thead>
 
-<tr>
+            <tr>
 
-    <th>ID</th>
-    <th>Name</th>
-    <th>Email</th>
-    <th>Department</th>
-    <th>Position</th>
-    <th>Salary</th>
-    <th>Actions</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Salary</th>
+                <th>Actions</th>
 
-</tr>
+            </tr>
 
-</thead>
+        </thead>
 
 
-<tbody>
+        <tbody>
 
-{% for employee in employees %}
+            {% for employee in employees %}
 
-<tr>
+                <tr>
 
-    <td>
-        {{ employee.id }}
-    </td>
+                    <td>
+                        {{ employee.id }}
+                    </td>
 
-    <td>
-        {{ employee.name }}
-    </td>
+                    <td>
+                        {{ employee.name }}
+                    </td>
 
-    <td>
-        {{ employee.email }}
-    </td>
+                    <td>
+                        {{ employee.email }}
+                    </td>
 
-    <td>
-        {{ employee.department }}
-    </td>
+                    <td>
+                        {{ employee.department }}
+                    </td>
 
-    <td>
-        {{ employee.position }}
-    </td>
+                    <td>
+                        {{ employee.position }}
+                    </td>
 
-    <td>
-        Rs. {{ "%.2f"|format(employee.salary) }}
-    </td>
+                    <td>
+                        Rs. {{ "%.2f"|format(employee.salary) }}
+                    </td>
 
-    <td>
+                    <td>
 
-        <a
-            href="{{ url_for(
-                'main.employee_detail',
-                employee_id=employee.id
-            ) }}"
-        >
-            View
-        </a>
+                        <a
+                            href="{{ url_for(
+                                'main.employee_detail',
+                                employee_id=employee.id
+                            ) }}"
+                        >
+                            View
+                        </a>
 
-    </td>
+                    </td>
 
-</tr>
+                </tr>
 
-{% else %}
+            {% else %}
 
-<tr>
+                <tr>
 
-    <td colspan="7">
-        No employees found.
-    </td>
+                    <td colspan="7">
+                        No employees found.
+                    </td>
 
-</tr>
+                </tr>
 
-{% endfor %}
+            {% endfor %}
 
-</tbody>
+        </tbody>
 
-</table>
+    </table>
 
 </div>
 

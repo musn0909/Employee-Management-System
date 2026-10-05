@@ -44,38 +44,42 @@ Employee Details
     </p>
 
 
-    <div class="actions">
+    {% if session.get("role") in ["admin", "hr"] %}
 
-        <a
-            class="button"
-            href="{{ url_for(
-                'main.edit_employee',
-                employee_id=employee.id
-            ) }}"
-        >
-            Edit
-        </a>
+        <div class="actions">
 
-
-        <form
-            method="POST"
-            action="{{ url_for(
-                'main.delete_employee',
-                employee_id=employee.id
-            ) }}"
-            onsubmit="return confirmDelete()"
-        >
-
-            <button
-                class="danger"
-                type="submit"
+            <a
+                class="button"
+                href="{{ url_for(
+                    'main.edit_employee',
+                    employee_id=employee.id
+                ) }}"
             >
-                Delete
-            </button>
+                Edit
+            </a>
 
-        </form>
 
-    </div>
+            <form
+                method="POST"
+                action="{{ url_for(
+                    'main.delete_employee',
+                    employee_id=employee.id
+                ) }}"
+                onsubmit="return confirmDelete()"
+            >
+
+                <button
+                    class="danger"
+                    type="submit"
+                >
+                    Delete
+                </button>
+
+            </form>
+
+        </div>
+
+    {% endif %}
 
 </div>
 

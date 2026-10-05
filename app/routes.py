@@ -1,10 +1,13 @@
+from functools import wraps
+
 from flask import (
     Blueprint,
     render_template,
     request,
     redirect,
     url_for,
-    flash
+    flash,
+    session
 )
 
 from app import db
@@ -14,7 +17,52 @@ from app.models import Employee
 main = Blueprint("main", __name__)
 
 
+# ---------------------------------------------------------
+# HTML Authentication Helpers
+# ---------------------------------------------------------
+
+def html_login_required(view_function):
+    @wraps(view_function)
+    def wrapped_view(*args, **kwargs):
+
+        if "user_id" not in session:
+            return redirect(url_for("main.login_page"))
+
+        return view_function(*args, **kwargs)
+
+    return wrapped_view
+
+
+def html_role_required(*allowed_roles):
+    def decorator(view_function):
+
+        @wraps(view_function)
+        def wrapped_view(*args, **kwargs):
+
+            if "user_id" not in session:
+                return redirect(url_for("main.login_page"))
+
+            if session.get("role") not in allowed_roles:
+                flash(
+                    "You do not have permission to perform this action.",
+                    "error"
+                )
+
+                return redirect(url_for("main.index"))
+
+            return view_function(*args, **kwargs)
+
+        return wrapped_view
+
+    return decorator
+
+
+# ---------------------------------------------------------
+# Dashboard / Employee List
+# ---------------------------------------------------------
+
 @main.route("/")
+@html_login_required
 def index():
 
     search = request.args.get("search", "")
@@ -57,7 +105,12 @@ def index():
     )
 
 
+# ---------------------------------------------------------
+# Employee Details
+# ---------------------------------------------------------
+
 @main.route("/employee/<int:employee_id>")
+@html_login_required
 def employee_detail(employee_id):
 
     employee = Employee.query.get_or_404(
@@ -70,10 +123,16 @@ def employee_detail(employee_id):
     )
 
 
+# ---------------------------------------------------------
+# Add Employee
+# Admin / HR Only
+# ---------------------------------------------------------
+
 @main.route(
     "/employee/add",
     methods=["GET", "POST"]
 )
+@html_role_required("admin", "hr")
 def add_employee():
 
     if request.method == "POST":
@@ -86,7 +145,7 @@ def add_employee():
         email = request.form.get(
             "email",
             ""
-        ).strip()
+        ).strip().lower()
 
         department = request.form.get(
             "department",
@@ -129,10 +188,10 @@ def add_employee():
             if salary < 0:
                 raise ValueError
 
-        except ValueError:
+        except (ValueError, TypeError):
 
             flash(
-                "Salary must be a valid positive number.",
+                "Salary must be a valid non-negative number.",
                 "error"
             )
 
@@ -166,7 +225,6 @@ def add_employee():
         )
 
         db.session.add(employee)
-
         db.session.commit()
 
         flash(
@@ -183,10 +241,16 @@ def add_employee():
     )
 
 
+# ---------------------------------------------------------
+# Edit Employee
+# Admin / HR Only
+# ---------------------------------------------------------
+
 @main.route(
     "/employee/<int:employee_id>/edit",
     methods=["GET", "POST"]
 )
+@html_role_required("admin", "hr")
 def edit_employee(employee_id):
 
     employee = Employee.query.get_or_404(
@@ -203,7 +267,7 @@ def edit_employee(employee_id):
         email = request.form.get(
             "email",
             ""
-        ).strip()
+        ).strip().lower()
 
         department = request.form.get(
             "department",
@@ -220,6 +284,7 @@ def edit_employee(employee_id):
             ""
         ).strip()
 
+        # Validate required fields
         if not all([
             name,
             email,
@@ -240,6 +305,7 @@ def edit_employee(employee_id):
                 )
             )
 
+        # Validate salary
         try:
 
             salary = float(salary)
@@ -247,7 +313,7 @@ def edit_employee(employee_id):
             if salary < 0:
                 raise ValueError
 
-        except ValueError:
+        except (ValueError, TypeError):
 
             flash(
                 "Invalid salary.",
@@ -261,7 +327,7 @@ def edit_employee(employee_id):
                 )
             )
 
-        # Check if another employee uses email
+        # Check duplicate email
         duplicate = Employee.query.filter(
             Employee.email == email,
             Employee.id != employee.id
@@ -281,6 +347,7 @@ def edit_employee(employee_id):
                 )
             )
 
+        # Update employee
         employee.name = name
         employee.email = email
         employee.department = department
@@ -307,10 +374,16 @@ def edit_employee(employee_id):
     )
 
 
+# ---------------------------------------------------------
+# Delete Employee
+# Admin / HR Only
+# ---------------------------------------------------------
+
 @main.route(
     "/employee/<int:employee_id>/delete",
     methods=["POST"]
 )
+@html_role_required("admin", "hr")
 def delete_employee(employee_id):
 
     employee = Employee.query.get_or_404(
@@ -318,7 +391,6 @@ def delete_employee(employee_id):
     )
 
     db.session.delete(employee)
-
     db.session.commit()
 
     flash(
@@ -328,4 +400,21 @@ def delete_employee(employee_id):
 
     return redirect(
         url_for("main.index")
+    )
+
+
+# ---------------------------------------------------------
+# Login Page
+# ---------------------------------------------------------
+
+@main.route("/login")
+def login_page():
+
+    if "user_id" in session:
+        return redirect(
+            url_for("main.index")
+        )
+
+    return render_template(
+        "login.html"
     )

@@ -15,6 +15,7 @@ def app():
     with app.app_context():
         db.create_all()
 
+        # Admin user
         admin = User(
             username="admin",
             email="admin@test.com",
@@ -22,6 +23,7 @@ def app():
         )
         admin.set_password("AdminPass123!")
 
+        # Viewer user
         viewer = User(
             username="viewer",
             email="viewer@test.com",
@@ -29,7 +31,20 @@ def app():
         )
         viewer.set_password("ViewerPass123!")
 
-        db.session.add_all([admin, viewer])
+        # HR user
+        hr = User(
+            username="hr",
+            email="hr@test.com",
+            role="hr"
+        )
+        hr.set_password("HRPass123!")
+
+        db.session.add_all([
+            admin,
+            viewer,
+            hr
+        ])
+
         db.session.commit()
 
         yield app
@@ -53,11 +68,32 @@ def login(client, email, password):
     )
 
 
+# ---------------------------------------------------------
+# Homepage / Authentication
+# ---------------------------------------------------------
+
 def test_homepage(client):
+    login(
+        client,
+        "admin@test.com",
+        "AdminPass123!"
+    )
+
     response = client.get("/")
 
     assert response.status_code == 200
 
+
+def test_homepage_requires_login(client):
+    response = client.get("/")
+
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+
+
+# ---------------------------------------------------------
+# Health Check
+# ---------------------------------------------------------
 
 def test_health_check(client):
     response = client.get("/api/health")
@@ -68,6 +104,10 @@ def test_health_check(client):
 
     assert data["status"] == "healthy"
 
+
+# ---------------------------------------------------------
+# Login
+# ---------------------------------------------------------
 
 def test_login(client):
     response = login(
@@ -89,6 +129,10 @@ def test_me_requires_login(client):
     assert response.status_code == 401
 
 
+# ---------------------------------------------------------
+# Employee Access
+# ---------------------------------------------------------
+
 def test_unauthenticated_employee_access(client):
     response = client.get("/api/employees")
 
@@ -106,6 +150,10 @@ def test_viewer_can_get_employees(client):
 
     assert response.status_code == 200
 
+
+# ---------------------------------------------------------
+# Create Employee
+# ---------------------------------------------------------
 
 def test_viewer_cannot_create_employee(client):
     login(
@@ -153,6 +201,31 @@ def test_admin_can_create_employee(client):
     assert data["employee"]["name"] == "Ali Khan"
 
 
+def test_hr_can_create_employee(client):
+    login(
+        client,
+        "hr@test.com",
+        "HRPass123!"
+    )
+
+    response = client.post(
+        "/api/employees",
+        json={
+            "name": "HR Employee",
+            "email": "hr.employee@example.com",
+            "department": "HR",
+            "position": "HR Officer",
+            "salary": 65000
+        }
+    )
+
+    assert response.status_code == 201
+
+    data = response.get_json()
+
+    assert data["employee"]["name"] == "HR Employee"
+
+
 def test_create_employee_without_email(client):
     login(
         client,
@@ -172,6 +245,10 @@ def test_create_employee_without_email(client):
 
     assert response.status_code == 400
 
+
+# ---------------------------------------------------------
+# Update Employee
+# ---------------------------------------------------------
 
 def test_admin_can_update_employee(client):
     login(
@@ -228,6 +305,10 @@ def test_viewer_cannot_update_employee(client):
     assert response.status_code == 403
 
 
+# ---------------------------------------------------------
+# Delete Employee
+# ---------------------------------------------------------
+
 def test_admin_can_delete_employee(client):
     login(
         client,
@@ -271,6 +352,10 @@ def test_viewer_cannot_delete_employee(client):
     assert response.status_code == 403
 
 
+# ---------------------------------------------------------
+# Logout
+# ---------------------------------------------------------
+
 def test_logout(client):
     login(
         client,
@@ -278,10 +363,14 @@ def test_logout(client):
         "AdminPass123!"
     )
 
-    response = client.post("/api/auth/logout")
+    response = client.post(
+        "/api/auth/logout"
+    )
 
     assert response.status_code == 200
 
-    response = client.get("/api/auth/me")
+    response = client.get(
+        "/api/auth/me"
+    )
 
     assert response.status_code == 401

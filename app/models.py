@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -63,10 +63,10 @@ class User(db.Model):
         default="viewer"
     )
     created_at = db.Column(
-        db.DateTime,
-        default=datetime.utcnow,
-        nullable=False
-    )
+    db.DateTime,
+    default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    nullable=False
+)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

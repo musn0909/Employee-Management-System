@@ -33,15 +33,36 @@
             Employee Manager
         </h2>
 
-        <div>
+        <div class="nav-links">
 
-            <a href="{{ url_for('main.index') }}">
-                Employees
-            </a>
+            {% if session.get("user_id") %}
 
-            <a href="{{ url_for('main.add_employee') }}">
-                Add Employee
-            </a>
+                <a href="{{ url_for('main.index') }}">
+                    Employees
+                </a>
+
+                {% if session.get("role") in ["admin", "hr"] %}
+
+                    <a href="{{ url_for('main.add_employee') }}">
+                        Add Employee
+                    </a>
+
+                {% endif %}
+
+                <span class="user-info">
+                    {{ session.get("username") }}
+                    ({{ session.get("role") }})
+                </span>
+
+                <button
+                    type="button"
+                    class="logout-button"
+                    onclick="logout()"
+                >
+                    Logout
+                </button>
+
+            {% endif %}
 
         </div>
 
