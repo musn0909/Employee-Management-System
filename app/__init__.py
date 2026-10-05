@@ -2,13 +2,11 @@ import os
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 
 from config import Config
 
 
 db = SQLAlchemy()
-migrate = Migrate()
 
 
 def create_app(config_overrides=None):
@@ -29,7 +27,6 @@ def create_app(config_overrides=None):
         app.config.update(config_overrides)
 
     db.init_app(app)
-    migrate.init_app(app, db)
 
     from app.models import Employee, User
     from app.routes import main
