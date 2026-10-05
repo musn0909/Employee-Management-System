@@ -8,3 +8,4 @@ instance/
 .vscode/
 *.db
 "@ | Out-File -Encoding utf8 .gitignore
+.neon

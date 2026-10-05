@@ -2,12 +2,17 @@ import os
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
 from config import Config
 
+
 db = SQLAlchemy()
+migrate = Migrate()
 
 
-def create_app():
+def create_app(config_overrides=None):
+
     if os.getenv("VERCEL"):
         app = Flask(
             __name__,
@@ -17,16 +22,22 @@ def create_app():
         app = Flask(__name__)
 
     app.config.from_object(Config)
-    db.init_app(app)
 
-    from app.models import Employee
+    # Apply test/development-specific configuration
+    # BEFORE initializing SQLAlchemy.
+    if config_overrides:
+        app.config.update(config_overrides)
+
+    db.init_app(app)
+    migrate.init_app(app, db)
+
+    from app.models import Employee, User
     from app.routes import main
     from app.api import api
+    from app.auth import auth
 
     app.register_blueprint(main)
     app.register_blueprint(api, url_prefix="/api")
-
-    with app.app_context():
-        db.create_all()
+    app.register_blueprint(auth, url_prefix="/api/auth")
 
     return app

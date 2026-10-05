@@ -3,6 +3,7 @@ import re
 
 from app import db
 from app.models import Employee
+from app.auth_utils import login_required, role_required
 
 
 api = Blueprint("api", __name__)
@@ -14,7 +15,6 @@ api = Blueprint("api", __name__)
 
 @api.route("/test", methods=["GET"])
 def test_api():
-
     return {
         "message": "Employee API is working!"
     }
@@ -26,7 +26,6 @@ def test_api():
 
 @api.route("/health", methods=["GET"])
 def health_check():
-
     return jsonify({
         "status": "healthy",
         "service": "Employee Management API"
@@ -38,6 +37,7 @@ def health_check():
 # --------------------------------------------------
 
 @api.route("/employees", methods=["GET"])
+@login_required
 def get_employees():
 
     employees = Employee.query.all()
@@ -53,12 +53,13 @@ def get_employees():
 # --------------------------------------------------
 
 @api.route("/employees", methods=["POST"])
+@login_required
+@role_required("admin", "hr")
 def create_employee():
 
     data = request.get_json()
 
     if not data:
-
         return jsonify({
             "error": "Request body must contain JSON"
         }), 400
@@ -75,7 +76,6 @@ def create_employee():
     for field in required_fields:
 
         if field not in data:
-
             return jsonify({
                 "error": f"{field} is required"
             }), 400
@@ -150,6 +150,7 @@ def create_employee():
 # --------------------------------------------------
 
 @api.route("/employees/<int:employee_id>", methods=["GET"])
+@login_required
 def get_employee(employee_id):
 
     employee = db.session.get(
@@ -176,6 +177,8 @@ def get_employee(employee_id):
     "/employees/<int:employee_id>",
     methods=["PUT"]
 )
+@login_required
+@role_required("admin", "hr")
 def update_employee(employee_id):
 
     employee = db.session.get(
@@ -318,6 +321,8 @@ def update_employee(employee_id):
     "/employees/<int:employee_id>",
     methods=["DELETE"]
 )
+@login_required
+@role_required("admin", "hr")
 def delete_employee(employee_id):
 
     employee = db.session.get(
